@@ -1,0 +1,146 @@
+# MONTHLY METRICS TABLE
+
+# Define the order of months
+month_order <- c(
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+)
+
+# Monthly summary 2021
+monthly_summary_2021 <- df_2021 %>%
+  group_by(month) %>%
+  summarise(
+    total_customers = n_distinct(customer_id),
+    total_revenue = sum(netsuite_revenue),
+    membership_revenue = sum(netsuite_revenue[purchase_type %in% c("Membership For You", "Individual Membership Renewal")]),
+    product_revenue = sum(netsuite_revenue[purchase_type == "Product Purchase"]),
+    aov = round(mean(netsuite_revenue[purchase_type == "Product Purchase"]), 2)
+  ) %>%
+  mutate(month = factor(month, levels = month_order)) %>%
+  arrange(month)
+
+# Transactions
+transactions <- df_2021 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(month) %>%
+  summarise(total_transactions = n())
+
+# customers who made a first purchase
+cust_first_purchases <- df_2021 %>%
+  filter(purchase_type == "Product Purchase" & customer_status == "New") %>%
+  group_by(month) %>%
+  summarise(
+    first_purchases = n(),
+    first_purchase_revenue = sum(netsuite_revenue),
+    aov_first_purchase = mean(netsuite_revenue)
+  )
+
+
+# customers who made a purchase
+cust_purchases <- df_2021 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(month) %>%
+  summarise(
+    customer_purchases = n_distinct(customer_id)
+  )
+
+# new customers
+nouvel_clients <- df_2021 %>%
+  filter(customer_status == "New") %>%
+  group_by(month) %>%
+  summarise(
+    new_customers = n_distinct(customer_id)
+  )
+
+# Total customers
+tot_cust <- df_2021 %>%
+  group_by(month) %>%
+  summarise(
+    total_customers = n_distinct(customer_id)
+  )
+
+# Join final table
+monthly_summary_2021_metrics <- monthly_summary_2021 %>%
+  left_join(transactions, by = "month") %>%
+  left_join(cust_first_purchases, by = "month") %>%
+  left_join(cust_purchases, by = "month") %>%
+  left_join(nouvel_clients, by = "month") %>%
+  left_join(tot_cust, by = "month") %>%
+  select(
+    month, total_customers.x, total_revenue, membership_revenue,
+    first_purchases, first_purchase_revenue, aov_first_purchase,
+    customer_purchases,new_customers, product_revenue,
+    total_transactions
+  )
+
+monthly_summary_2021_metrics
+
+# Monthly summary 2022
+monthly_summary_2022 <- df_2022 %>%
+  group_by(month) %>%
+  summarise(
+    total_customers = n_distinct(customer_id),
+    total_revenue = sum(netsuite_revenue),
+    membership_revenue = sum(netsuite_revenue[purchase_type %in% c("Membership For You", "Individual Membership Renewal")]),
+    product_revenue = sum(netsuite_revenue[purchase_type == "Product Purchase"]),
+    aov = round(mean(netsuite_revenue[purchase_type == "Product Purchase"]), 2)
+  ) %>%
+  mutate(month = factor(month, levels = month_order)) %>%
+  arrange(month)
+
+
+# Transactions
+transactions <- df_2022 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(month) %>%
+  summarise(total_transactions = n())
+
+# customers who made a first purchase
+cust_first_purchases <- df_2022 %>%
+  filter(purchase_type == "Product Purchase" & customer_status == "New") %>%
+  group_by(month) %>%
+  summarise(
+    first_purchases = n(),
+    first_purchase_revenue = sum(netsuite_revenue),
+    aov_first_purchase = mean(netsuite_revenue)
+  )
+
+
+# customers who made a purchase
+cust_purchases <- df_2022 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(month) %>%
+  summarise(
+    customer_purchases = n_distinct(customer_id)
+  )
+
+# new customers
+nouvel_clients <- df_2022 %>%
+  filter(customer_status == "New") %>%
+  group_by(month) %>%
+  summarise(
+    new_customers = n_distinct(customer_id)
+  )
+
+# Total customers
+tot_cust <- df_2022 %>%
+  group_by(month) %>%
+  summarise(
+    total_customers = n_distinct(customer_id)
+  )
+
+# Join final table
+monthly_summary_2022_metrics <- monthly_summary_2022 %>%
+  left_join(transactions, by = "month") %>%
+  left_join(cust_first_purchases, by = "month") %>%
+  left_join(cust_purchases, by = "month") %>%
+  left_join(nouvel_clients, by = "month") %>%
+  left_join(tot_cust, by = "month") %>%
+  select(
+    month, total_customers.x, total_revenue, membership_revenue,
+    first_purchases, first_purchase_revenue, aov_first_purchase,
+    customer_purchases,new_customers, product_revenue,
+    total_transactions
+  )
+
+monthly_summary_2022_metrics
