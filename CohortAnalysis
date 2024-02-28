@@ -1,0 +1,269 @@
+# RETENTION AND CHURN
+
+# Filter out product purchases to have membership purchase data
+nouvelle <- df_2021 %>%
+  filter(!purchase_type == "Product Purchase")
+
+months <- c("January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+)
+
+new_customers_by_month <- lapply(months, function(month) {
+  df_2021 %>%
+    filter(month == month & purchase_type == "Membership For You") %>%
+    group_by(month) %>%
+    summarise(new_customers = n())
+})
+
+# Combine the results into a single data frame
+new_customers_df <- new_customers_by_month[[1]]
+
+new_customers_df
+
+
+new_customers_df <- new_customers_df %>%
+  mutate(month = factor(month,
+                        levels = c("January", "February", "March", "April",
+                                   "May", "June", "July", "August",
+                                   "September", "October", "November",
+                                   "December"))) %>%
+  arrange(month)
+
+
+# Renewals
+
+jan_renewals <- nouvelle %>%
+  filter(customer_id <= 209 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+feb_renewals <- nouvelle %>%
+  filter(customer_id >= 210 & customer_id <= 291 &
+           purchase_type == "Individual Membership Renewal" &
+           !customer_id %in% c(277, 279)) %>%  # 279 and 277
+  group_by(month) %>%
+  summarise(renewals = n())
+
+march_renewals <- nouvelle %>%
+  filter(customer_id >= 293 & customer_id <= 437 &
+           purchase_type == "Individual Membership Renewal" &
+           !customer_id %in% c(303, 413, 425, 431, 434)) %>% # 303, 413, 425, 431, 434
+  group_by(month) %>%
+  summarise(renewals = n())
+
+apr_renewals <- nouvelle %>%
+  filter(customer_id >= 438 & customer_id <= 609 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+may_renewals <- nouvelle %>%
+  filter(customer_id >= 610 & customer_id <= 893 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+june_renewals <- nouvelle %>%
+  filter(customer_id >= 894 & customer_id <= 1187 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+july_renewals <- nouvelle %>%
+  filter(customer_id >= 1188 & customer_id <= 1372 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+aug_renewals <- nouvelle %>%
+  filter(customer_id >= 1373 & customer_id <= 1602 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+sep_renewals <- nouvelle %>%
+  filter(customer_id >= 1603 & customer_id <= 1849 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+oct_renewals <- nouvelle %>%
+  filter(customer_id >= 1850 & customer_id <= 2096 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+nov_renewals <- nouvelle %>%
+  filter(customer_id >= 2097 & customer_id <= 2612 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+dec_renewals <- nouvelle %>%
+  filter(customer_id >= 2613 & customer_id <= 3288 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+# Calculate renewals then assign to months
+jan_renewals <- sum(jan_renewals$renewals)
+feb_renewals <- sum(feb_renewals$renewals)
+march_renewals <- sum(march_renewals$renewals)
+apr_renewals <- sum(apr_renewals$renewals)
+may_renewals <- sum(may_renewals$renewals)
+june_renewals <- sum(june_renewals$renewals)
+july_renewals <- sum(july_renewals$renewals)
+aug_renewals <- sum(aug_renewals$renewals)
+sep_renewals <- sum(sep_renewals$renewals)
+oct_renewals <- sum(oct_renewals$renewals)
+nov_renewals <- sum(nov_renewals$renewals)
+dec_renewals <- sum(dec_renewals$renewals)
+
+renewals <- c(jan_renewals, feb_renewals, march_renewals, apr_renewals,
+              may_renewals, june_renewals, july_renewals, aug_renewals,
+              sep_renewals, oct_renewals, nov_renewals, dec_renewals)
+
+new_customers_df$renewals <- renewals
+
+retention_churn_2021 <- new_customers_df %>%
+  mutate(
+    retention_rate = round((renewals/new_customers * 100), 2)
+  )
+
+retention_churn_2021
+
+# 2022
+# Filter out product purchases to have membership purchase data
+
+nouvelle <- df_2022 %>%
+  filter(!purchase_type == "Product Purchase")
+
+months <- c("January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+)
+
+new_customers_by_month <- lapply(months, function(month) {
+  df_2022 %>%
+    filter(month == month & purchase_type == "Membership For You") %>%
+    group_by(month) %>%
+    summarise(new_customers = n())
+})
+
+# Combine the results into a single data frame
+new_customers_df <- new_customers_by_month[[1]]
+
+new_customers_df
+
+
+new_customers_df <- new_customers_df %>%
+  mutate(month = factor(month,
+                        levels = c("January", "February", "March", "April",
+                                   "May", "June", "July", "August",
+                                   "September", "October", "November",
+                                   "December"))) %>%
+  arrange(month)
+
+
+# Renewals
+
+jan_renewals <- nouvelle %>%
+  filter(customer_id <= 3565 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+feb_renewals <- nouvelle %>%
+  filter(customer_id >= 3566 & customer_id <= 3786 &
+           purchase_type == "Individual Membership Renewal" &
+           !customer_id %in% c(277, 279)) %>%  # 279 and 277
+  group_by(month) %>%
+  summarise(renewals = n())
+
+march_renewals <- nouvelle %>%
+  filter(customer_id >= 3787 & customer_id <= 4059 &
+           purchase_type == "Individual Membership Renewal" &
+           !customer_id %in% c(303, 413, 425, 431, 434)) %>% # 303, 413, 425, 431, 434
+  group_by(month) %>%
+  summarise(renewals = n())
+
+apr_renewals <- nouvelle %>%
+  filter(customer_id >= 4060 & customer_id <= 4251 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+may_renewals <- nouvelle %>%
+  filter(customer_id >= 4252 & customer_id <= 4420 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+june_renewals <- nouvelle %>%
+  filter(customer_id >= 4421 & customer_id <= 4584 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+july_renewals <- nouvelle %>%
+  filter(customer_id >= 4585 & customer_id <= 4724 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+aug_renewals <- nouvelle %>%
+  filter(customer_id >= 4725 & customer_id <= 4878 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+sep_renewals <- nouvelle %>%
+  filter(customer_id >= 4879 & customer_id <= 5010 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+oct_renewals <- nouvelle %>%
+  filter(customer_id >= 5011 & customer_id <= 5155 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+nov_renewals <- nouvelle %>%
+  filter(customer_id >= 5156 & customer_id <= 5586 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+dec_renewals <- nouvelle %>%
+  filter(customer_id >= 5587 & customer_id <= 6051 &
+           purchase_type == "Individual Membership Renewal") %>%
+  group_by(month) %>%
+  summarise(renewals = n())
+
+# Calculate renewals then assign to months
+jan_renewals <- sum(jan_renewals$renewals)
+feb_renewals <- sum(feb_renewals$renewals)
+march_renewals <- sum(march_renewals$renewals)
+apr_renewals <- sum(apr_renewals$renewals)
+may_renewals <- sum(may_renewals$renewals)
+june_renewals <- sum(june_renewals$renewals)
+july_renewals <- sum(july_renewals$renewals)
+aug_renewals <- sum(aug_renewals$renewals)
+sep_renewals <- sum(sep_renewals$renewals)
+oct_renewals <- sum(oct_renewals$renewals)
+nov_renewals <- sum(nov_renewals$renewals)
+dec_renewals <- sum(dec_renewals$renewals)
+
+renewals <- c(jan_renewals, feb_renewals, march_renewals, apr_renewals,
+              may_renewals, june_renewals, july_renewals, aug_renewals,
+              sep_renewals, oct_renewals, nov_renewals, dec_renewals)
+
+new_customers_df$renewals <- renewals
+
+retention_churn_2022 <- new_customers_df %>%
+  mutate(
+    retention_rate = round((renewals/new_customers * 100), 2)
+  )
+
+retention_churn_2022
