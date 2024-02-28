@@ -1,0 +1,100 @@
+# Time Lag
+#---------------- TIME LAG FROM MEMBERSHIP PURCHASE TO FRIST PURCHASE----------#
+days <- df_2021 %>%
+  filter(purchase_type %in% c("Membership For You", "Product Purchase")) %>%
+  group_by(customer_id) %>%
+  arrange(customer_id, order_date) %>%
+  summarise(
+    days_to_first_product = as.numeric(
+      difftime(
+        min(order_date[purchase_type == "Product Purchase"]),
+        min(order_date[purchase_type == "Membership For You"]),
+        units = "days"
+      )
+    )
+  )
+
+
+filtered_days <- days[is.finite(days$days_to_first_product), ]
+
+days_taken_2021 <- filtered_days %>%
+  group_by(days_to_first_product) %>%
+  summarise(count = n())
+
+days_taken_2021 <- days_taken_2021[-1,]
+days_taken_2021
+
+# Time Lag: 2022
+new_cust <- df_2022 %>%
+  filter(customer_status == "New") %>%
+  group_by(month) %>%
+  summarise(
+    new_customers = n()
+  )
+
+# Days taken
+# Problematic Id's
+days <- df_2022 %>%
+  filter(purchase_type %in% c("Membership For You", "Product Purchase")) %>%
+  group_by(customer_id) %>%
+  arrange(customer_id, order_date) %>%
+  summarise(
+    days_to_first_product = as.numeric(
+      difftime(
+        min(order_date[purchase_type == "Product Purchase"]),
+        min(order_date[purchase_type == "Membership For You"]),
+        units = "days"
+      )
+    )
+  )
+
+
+filtered_days <- days[is.finite(days$days_to_first_product), ]
+
+days_taken_2022 <- filtered_days %>%
+  group_by(days_to_first_product) %>%
+  summarise(count = n()) %>%
+  arrange(days_to_first_product) %>%
+  slice(5:n())
+
+days_taken_2022
+
+
+
+#----------------- TIME LAG TO SECOND PURCHASE --------------------------------#
+# Days taken to second purchase
+# Sort the data frame by customer_id and order_date
+days_2021 <- df_2021 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  arrange(customer_id, order_date) %>%
+  group_by(customer_id) %>%
+  filter(row_number() == 2) %>%
+  summarise(time_to_second_purchase = min(order_date) - min(df_2021$order_date),
+            avg_revenue = mean(netsuite_revenue[purchase_type == "Product Purchase"]),
+            total_revenue = sum(netsuite_revenue[purchase_type == "Product Purchase"]))
+
+days_cust <- days_2021 %>%
+  group_by(time_to_second_purchase) %>%
+  summarise(
+    total_customers = n(),
+    avg_revenue = mean(avg_revenue),
+    total_revenue = sum(total_revenue)
+  )
+
+# Sort the data frame by customer_id and order_date
+days_2022 <- df_2022 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  arrange(customer_id, order_date) %>%
+  group_by(customer_id) %>%
+  filter(row_number() == 2) %>%
+  summarise(time_to_second_purchase = min(order_date) - min(df_2021$order_date),
+            avg_revenue = mean(netsuite_revenue[purchase_type == "Product Purchase"]),
+            total_revenue = sum(netsuite_revenue[purchase_type == "Product Purchase"]))
+
+days_cust <- days_2022 %>%
+  group_by(time_to_second_purchase) %>%
+  summarise(
+    total_customers = n(),
+    avg_revenue = mean(avg_revenue),
+    total_revenue = sum(total_revenue)
+  )
