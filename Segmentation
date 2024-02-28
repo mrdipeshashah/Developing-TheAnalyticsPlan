@@ -1,0 +1,147 @@
+# SEGMENTATION
+# Script dependencies
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+options(scipen = 999)
+
+# Import datasets
+purchases <- read.csv("data/All Data Tables/Customer ID and Order ID - Final_alt.csv")
+netsuite_transactions <- read.csv("data/All Data Tables/NetSuite_Transactions.csv")
+google_analytics <- read.csv("data/All Data Tables/GoogleAnalytics_Transactions.csv")
+
+
+# Data Preprocessing
+head(netsuite_transactions)
+head(google_analytics)
+head(purchases)
+
+#purchases$order_date <- as.Date(purchases$order_date, "%d/%m/%y")
+purchases$order_date <- as.Date(purchases$order_date, format = "%m/%d/%Y")
+
+# Column renaming
+colnames(netsuite_transactions) <- c("netsuite_order_id", "netsuite_revenue")
+colnames(google_analytics) <- c("ga_order_id", "ga_source_medium")
+colnames(purchases) <- c("purchase_type", "customer_id", "order_id", "order_date")
+
+
+customer_purchases <- purchases %>%
+  filter(!is.na(customer_id))
+
+
+
+# Joining tables
+df <- inner_join(netsuite_transactions,
+                 customer_purchases,
+                 by = c("netsuite_order_id" = "order_id"))
+
+df <- inner_join(df,
+                 google_analytics,
+                 by = c("netsuite_order_id" = "ga_order_id"))
+
+#
+df <- df %>%
+  select(customer_id, netsuite_order_id, order_date,
+         purchase_type, ga_source_medium, netsuite_revenue)
+
+colnames(df)[2] <- "order_id"
+
+
+################################################################################
+# new returning
+df <- df %>%
+  arrange(customer_id, order_date) %>%
+  group_by(customer_id) %>%
+  mutate(customer_status = case_when(
+    purchase_type == "Membership For You" ~ "New",
+    purchase_type == "Individual Membership Renewal" ~ "Renewal",
+    purchase_type == "Product Purchase" & lag(purchase_type) == "Membership For You" ~ "New",
+    TRUE ~ "Returning"
+  )) %>%
+  ungroup()
+
+# Separate years
+df_2021 <- df %>% filter(year(order_date) == "2021")
+df_2022 <- df %>% filter(year(order_date) == "2022")
+
+
+# Adding month and year column - 2021
+df_2021$month <- month.name[month(df_2021$order_date)]
+df_2021$year <- year(df_2021$order_date)
+
+# Adding month and year column: 2022
+df_2022$month <- month.name[month(df_2022$order_date)]
+df_2022$year <- year(df_2022$order_date)
+
+# SEGMENTS: 2021
+segments <- df_2021 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(customer_id, order_date) %>%
+  summarise(
+    number_bottles = n(),
+    total_revenue = sum(netsuite_revenue)
+  )
+
+segments <- segments %>%
+  mutate(
+    segment = case_when(
+      number_bottles == 0 ~ "Hibernating",
+      number_bottles == 1 ~ "At Risk",
+      number_bottles >= 2 & number_bottles <= 3 ~ "Needs Attention",
+      number_bottles >= 4 & number_bottles <= 5 ~ "Loyal Customers",
+      number_bottles == 6 ~ "Champions",
+      number_bottles >= 7 ~ "Cannot Lose Them",
+      TRUE ~ "Other"  # Add a catch-all condition for cases not covered
+    )
+  )
+
+
+segment_summary_2021 <- segments %>%
+  group_by(segment) %>%
+  summarise(
+    total_customers = n(),
+    total_revenue = sum(total_revenue)  # Calculate total revenue for each segment
+  ) %>%
+  mutate(
+    percentage_of_revenue = round(total_revenue / sum(total_revenue) * 100, 2),
+    percentage_of_customers = round(total_customers / sum(total_customers) * 100, 2)
+  )
+
+segment_summary_2021
+
+# SEGMENTS: 2022
+segments <- df_2022 %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(customer_id) %>%
+  summarise(
+    number_bottles = n(),
+    total_revenue = sum(netsuite_revenue)
+  )
+
+segments <- segments %>%
+  mutate(
+    segment = case_when(
+      number_bottles == 0 ~ "Hibernating",
+      number_bottles == 1 ~ "At Risk",
+      number_bottles >= 2 & number_bottles <= 3 ~ "Needs Attention",
+      number_bottles >= 4 & number_bottles <= 5 ~ "Loyal Customers",
+      number_bottles == 6 ~ "Champions",
+      number_bottles >= 7 ~ "Cannot Lose Them",
+      TRUE ~ "Other"  # Add a catch-all condition for cases not covered
+    )
+  )
+
+
+segment_summary_2022 <- segments %>%
+  group_by(segment) %>%
+  summarise(
+    total_customers = n(),
+    total_revenue = sum(total_revenue)  # Calculate total revenue for each segment
+  ) %>%
+  mutate(
+    percentage_of_revenue = round(total_revenue / sum(total_revenue) * 100, 2),
+    percentage_of_customers = round(total_customers / sum(total_customers) * 100, 2)
+  )
+
+segment_summary_2022
