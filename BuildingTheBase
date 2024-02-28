@@ -1,0 +1,120 @@
+# DATA PROCESSING
+
+# Column renaming
+colnames(netsuite_transactions) <- c("netsuite_order_id", "netsuite_revenue")
+colnames(google_analytics) <- c("ga_order_id", "ga_source_medium")
+colnames(purchases) <- c("purchase_type", "customer_id", "order_id", "order_date")
+
+str(netsuite_transactions)
+str(google_analytics)
+str(purchases)
+
+# Convert order_date to date object
+purchases$order_date <- as.Date(purchases$order_date, format = "%m/%d/%Y")
+
+# Filter out non-customers
+customer_purchases <- purchases %>%
+  filter(!is.na(customer_id))
+
+# Convert factors
+google_analytics$ga_source_medium <- as.factor(google_analytics$ga_source_medium)
+customer_purchases$purchase_type <- as.factor(customer_purchases$purchase_type)
+
+# Plots
+
+# Boxplot showing customers by source and medium
+google_analytics %>%
+  group_by(ga_source_medium) %>%
+  summarize(
+    customers = n()
+  ) %>%
+  ggplot(aes(
+    x = reorder(ga_source_medium, customers),
+    y = customers)) +
+  geom_col(fill="#FCB321", col = "grey20") +
+  labs(
+    title = "Boxplot of Customers by Source & Medium",
+    x = "Google Analytics Source & Medium",
+    y = "# of Customers"
+  ) +
+  coord_flip() +
+  theme_minimal()
+
+# Line Chart showing product purchases over time
+plot_data <- customer_purchases %>%
+  filter(purchase_type == "Product Purchase") %>%
+  group_by(order_date) %>%
+  summarise(
+    transactions = n())
+
+avg_purchases <- mean(plot_data$transactions)
+
+ggplot(plot_data, aes(x = order_date, y = transactions)) +
+  geom_line(col = "#FA7903") +
+  geom_hline(yintercept = avg_purchases, linetype = "dashed", col = "grey10") +  # Add average line
+  labs(title = "Product Purchases Over Time",
+       x = "Date",
+       y = "# of Purchases") +
+  theme_minimal() +
+  annotate("text", x = max(plot_data$order_date) + 90, y = avg_purchases,
+           label = paste("Avg. Purchases/Day:", round(avg_purchases, 2)), size = 2.7,
+           vjust = -0.5, hjust = 1, color = "grey10")
+
+# Histogram showing Transaction Revenue distribution
+netsuite_transactions %>%
+  filter(netsuite_revenue > 0) %>%
+  ggplot(aes(x = netsuite_revenue)) +
+  geom_histogram(bins = 30, col= "grey20", fill = "#CB2332") +
+  scale_x_log10() +
+  labs(
+    title = "Histogram Showing Revenue Distribution",
+    x = "Revenue (£)",
+    y = "# of Transactions"
+  ) +
+  theme_minimal()
+
+# Joining all tables
+df <- inner_join(netsuite_transactions,
+                 customer_purchases,
+                 by = c("netsuite_order_id" = "order_id"))
+
+df <- inner_join(df,
+                 google_analytics,
+                 by = c("netsuite_order_id" = "ga_order_id"))
+
+#
+df <- df %>%
+  select(customer_id, netsuite_order_id, order_date,
+         purchase_type, ga_source_medium, netsuite_revenue)
+
+colnames(df)[2] <- "order_id"
+
+head(df)
+
+# Assign a customer status to each purchase type
+df <- df %>%
+  arrange(customer_id, order_date) %>%
+  group_by(customer_id) %>%
+  mutate(customer_status = case_when(
+    purchase_type == "Membership For You" ~ "New",
+    purchase_type == "Individual Membership Renewal" ~ "Renewal",
+    purchase_type == "Product Purchase" & lag(purchase_type) %in%
+      c("Membership For You", "Individual Membership Renewal") ~ "New",
+    TRUE ~ "Returning"
+  )) %>%
+  ungroup()
+
+head(df)
+
+# Separate years
+df_2021 <- df %>% filter(year(order_date) == "2021")
+df_2022 <- df %>% filter(year(order_date) == "2022")
+
+
+# Adding month and year column - 2021
+df_2021$month <- month.name[month(df_2021$order_date)]
+df_2021$year <- year(df_2021$order_date)
+
+# Adding month and year column: 2022
+df_2022$month <- month.name[month(df_2022$order_date)]
+df_2022$year <- year(df_2022$order_date)
